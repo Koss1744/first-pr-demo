@@ -6,6 +6,23 @@ export interface LdapConfig {
   userFilter: string;
 }
 
+/** Minimal shape we require of statically-configured OIDC RPs; passed through as-is to oidc-provider otherwise. */
+export interface OidcClientConfig {
+  client_id: string;
+  redirect_uris: string[];
+  [key: string]: unknown;
+}
+
+export interface OidcConfig {
+  /** Full external base URL this server is reachable at, e.g. https://sso.example.internal - used as the OIDC issuer. */
+  issuer: string;
+  /** Signing keys for oidc-provider's own cookies, newest first. Rotate by prepending a new one. */
+  cookieKeys: string[];
+  /** Private JWKS used to sign ID tokens, generated with `npm run create-oidc-jwks -w @hofi/server`. */
+  jwks: { keys: Record<string, unknown>[] };
+  clients: OidcClientConfig[];
+}
+
 export interface ServerConfig {
   port: number;
   databaseUrl: string;
@@ -17,6 +34,8 @@ export interface ServerConfig {
   maxFailedAttempts: number;
   lockoutDurationMs: number;
   totpDriftSteps: number;
+  /** Phase 2 web SSO. Unset means the OIDC provider is not mounted at all. */
+  oidc?: OidcConfig;
 }
 
 const ROOT_KEY_PATTERN = /^HOFI_ROOT_KEY_V(\d+)$/;
@@ -36,6 +55,50 @@ function parseRootKeys(env: NodeJS.ProcessEnv): Map<number, Buffer> {
     keys.set(version, key);
   }
   return keys;
+}
+
+function parseOidcConfig(env: NodeJS.ProcessEnv): OidcConfig | undefined {
+  const { HOFI_OIDC_ISSUER, HOFI_OIDC_COOKIE_KEYS, HOFI_OIDC_JWKS, HOFI_OIDC_CLIENTS } = env;
+  if (!HOFI_OIDC_ISSUER && !HOFI_OIDC_COOKIE_KEYS && !HOFI_OIDC_JWKS && !HOFI_OIDC_CLIENTS) {
+    return undefined;
+  }
+  if (!HOFI_OIDC_ISSUER || !HOFI_OIDC_COOKIE_KEYS || !HOFI_OIDC_JWKS || !HOFI_OIDC_CLIENTS) {
+    throw new Error(
+      "HOFI_OIDC_ISSUER, HOFI_OIDC_COOKIE_KEYS, HOFI_OIDC_JWKS and HOFI_OIDC_CLIENTS are all required to enable web SSO (Phase 2) - unset all of them to leave it disabled",
+    );
+  }
+
+  const cookieKeys = HOFI_OIDC_COOKIE_KEYS.split(",").map((k) => k.trim()).filter(Boolean);
+  if (cookieKeys.some((k) => k.length < 32)) {
+    throw new Error("Each key in HOFI_OIDC_COOKIE_KEYS must be at least 32 characters");
+  }
+
+  let jwks: OidcConfig["jwks"];
+  try {
+    jwks = JSON.parse(HOFI_OIDC_JWKS);
+  } catch (err) {
+    throw new Error(`HOFI_OIDC_JWKS is not valid JSON: ${(err as Error).message}`);
+  }
+  if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) {
+    throw new Error('HOFI_OIDC_JWKS must be a JSON object like {"keys":[...]} with at least one private JWK');
+  }
+
+  let clients: OidcConfig["clients"];
+  try {
+    clients = JSON.parse(HOFI_OIDC_CLIENTS);
+  } catch (err) {
+    throw new Error(`HOFI_OIDC_CLIENTS is not valid JSON: ${(err as Error).message}`);
+  }
+  if (!Array.isArray(clients) || clients.length === 0) {
+    throw new Error("HOFI_OIDC_CLIENTS must be a non-empty JSON array of OIDC client metadata objects");
+  }
+  for (const client of clients) {
+    if (!client.client_id || !Array.isArray(client.redirect_uris) || client.redirect_uris.length === 0) {
+      throw new Error("Every entry in HOFI_OIDC_CLIENTS needs a client_id and a non-empty redirect_uris array");
+    }
+  }
+
+  return { issuer: HOFI_OIDC_ISSUER, cookieKeys, jwks, clients };
 }
 
 /** Loads and validates server configuration from environment variables. */
@@ -89,5 +152,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     maxFailedAttempts: Number(env.HOFI_MAX_FAILED_ATTEMPTS ?? 5),
     lockoutDurationMs: Number(env.HOFI_LOCKOUT_DURATION_MS ?? 15 * 60 * 1000),
     totpDriftSteps: Number(env.HOFI_TOTP_DRIFT_STEPS ?? 1),
+    oidc: parseOidcConfig(env),
   };
 }

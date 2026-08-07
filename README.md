@@ -8,8 +8,9 @@ two-factor authentication, in two forms:
   encrypted locally with a master password.
 - **[`packages/server`](packages/server)** - `@hofi/server`, an internal
   multi-user MFA verification service for gating company logins (AD-backed),
-  Phase 1 of a larger rollout also covering web SSO and Windows workstation
-  logon. See its README for setup, API reference, and the roadmap.
+  plus an optional OIDC identity provider for web SSO. Phase 1 (verification
+  API) and Phase 2 (web SSO) are both implemented; Windows workstation logon
+  is still ahead. See its README for setup, API reference, and the roadmap.
 
 Both share **[`packages/core`](packages/core)**, `@hofi/core`: the actual
 TOTP/HOTP algorithm (HMAC-SHA1/256/512 per RFC 4226/6238) and `otpauth://`
@@ -56,5 +57,6 @@ npm run typecheck                # type-check the whole workspace (tsc -b)
 
 The CLI is a personal/educational tool - review the code before relying on
 it for accounts you can't afford to lose access to. The server targets real
-internal infrastructure but is Phase 1 of a staged rollout; read its
-README's "Known risks" section before deploying it against production AD.
+internal infrastructure and is still a staged rollout (Phase 3, Windows
+workstation logon, isn't built yet); read its README's "Known risks"
+sections before deploying it against production AD.
