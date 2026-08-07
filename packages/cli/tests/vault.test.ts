@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { changePassword, initVault, openVault, saveAccounts, vaultExists } from "../src/vault.js";
-import type { Account } from "../src/otpauth.js";
+import type { Account } from "@hofi/core";
 
 let dir: string;
 let vaultPath: string;

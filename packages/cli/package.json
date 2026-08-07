@@ -1,0 +1,30 @@
+{
+  "name": "hofi-authenticator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HOFI Authenticator - CLI TOTP-based two-factor authentication code generator (like Google Authenticator)",
+  "type": "module",
+  "bin": {
+    "hofi": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "files": ["dist"],
+  "keywords": ["totp", "2fa", "authenticator", "otp", "hotp", "cli"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@hofi/core": "^1.0.0",
+    "commander": "^12.1.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "tsx": "^4.19.2"
+  }
+}

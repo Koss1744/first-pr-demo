@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { totp, hotp, secondsRemaining } from "../src/totp.js";
-import { base32Encode } from "../src/base32.js";
+import { totp, hotp, secondsRemaining, matchTotpWindow } from "../src/totp.js";
+import { base32Encode, base32Decode } from "../src/base32.js";
 
 // RFC 6238 Appendix B test vectors (8-digit TOTP codes at T0=0, X=30s).
 const SHA1_SECRET = base32Encode(Buffer.from("12345678901234567890", "ascii"));
@@ -55,5 +55,57 @@ describe("secondsRemaining", () => {
     expect(secondsRemaining(30, 1000)).toBe(29);
     expect(secondsRemaining(30, 29_000)).toBe(1);
     expect(secondsRemaining(30, 30_000)).toBe(30);
+  });
+});
+
+describe("matchTotpWindow", () => {
+  const secretB32 = base32Encode(Buffer.from("12345678901234567890", "ascii"));
+  const secretBuffer = base32Decode(secretB32);
+  const period = 30;
+  const digits = 6;
+
+  function codeForStep(step: number): string {
+    return hotp(secretBuffer, step, { digits });
+  }
+
+  it("matches the exact current step", () => {
+    const timestamp = 59_000; // step 1
+    const step = matchTotpWindow(secretBuffer, codeForStep(1), { digits, period, timestamp });
+    expect(step).toBe(1);
+  });
+
+  it("accepts a code from one step in the past (clock drift)", () => {
+    const timestamp = 90_000; // step 3
+    const step = matchTotpWindow(secretBuffer, codeForStep(2), { digits, period, timestamp });
+    expect(step).toBe(2);
+  });
+
+  it("accepts a code from one step in the future (clock drift)", () => {
+    const timestamp = 90_000; // step 3
+    const step = matchTotpWindow(secretBuffer, codeForStep(4), { digits, period, timestamp });
+    expect(step).toBe(4);
+  });
+
+  it("rejects a code two steps away (outside the default window)", () => {
+    const timestamp = 90_000; // step 3
+    const step = matchTotpWindow(secretBuffer, codeForStep(5), { digits, period, timestamp });
+    expect(step).toBeNull();
+  });
+
+  it("rejects a code that does not match any step in the window", () => {
+    const timestamp = 90_000;
+    const step = matchTotpWindow(secretBuffer, "000000", { digits, period, timestamp });
+    expect(step).toBeNull();
+  });
+
+  it("rejects a code of the wrong length without throwing", () => {
+    const timestamp = 90_000;
+    expect(() => matchTotpWindow(secretBuffer, "12345", { digits, period, timestamp })).not.toThrow();
+    expect(matchTotpWindow(secretBuffer, "12345", { digits, period, timestamp })).toBeNull();
+  });
+
+  it("respects a custom driftSteps window", () => {
+    const timestamp = 90_000; // step 3
+    expect(matchTotpWindow(secretBuffer, codeForStep(5), { digits, period, timestamp, driftSteps: 2 })).toBe(5);
   });
 });

@@ -2,7 +2,7 @@ import { randomBytes, scryptSync, createCipheriv, createDecipheriv } from "node:
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Account } from "./otpauth.js";
+import type { Account } from "@hofi/core";
 
 const VAULT_VERSION = 1;
 const KEY_LENGTH = 32;

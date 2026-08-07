@@ -1,42 +1,25 @@
 {
-  "name": "hofi-authenticator",
+  "name": "hofi-authenticator-monorepo",
   "version": "1.0.0",
-  "description": "HOFI Authenticator - CLI TOTP-based two-factor authentication code generator (like Google Authenticator)",
+  "private": true,
+  "description": "HOFI Authenticator - TOTP-based two-factor authentication: CLI, core library, and internal MFA verification server",
   "type": "module",
-  "bin": {
-    "hofi": "./dist/cli.js"
-  },
-  "main": "./dist/index.js",
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx src/cli.ts",
-    "start": "node dist/cli.js",
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "dev:server": "npm run dev -w @hofi/server",
+    "dev:cli": "npm run dev -w hofi-authenticator",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc -b"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "totp",
-    "2fa",
-    "authenticator",
-    "otp",
-    "hotp",
-    "cli"
-  ],
   "license": "MIT",
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {
-    "commander": "^12.1.0",
-    "qrcode": "^1.5.4"
-  },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "@types/qrcode": "^1.5.5",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^4.1.10"
   }

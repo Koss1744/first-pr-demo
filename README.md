@@ -1,100 +1,60 @@
 # HOFI Authenticator
 
-A command-line two-factor authentication (2FA) code generator, like Google
-Authenticator, but for your terminal. HOFI Authenticator generates
-time-based one-time passwords (TOTP, [RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238))
-compatible with GitHub, Google, AWS, and any other service that uses
-standard TOTP 2FA.
+Time-based one-time password (TOTP, [RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238))
+two-factor authentication, in two forms:
 
-Accounts are stored locally in a vault encrypted with a master password
-(AES-256-GCM, key derived with scrypt) — nothing leaves your machine.
+- **[`packages/cli`](packages/cli)** - a personal command-line authenticator
+  app, like Google Authenticator for your terminal. Single user, secrets
+  encrypted locally with a master password.
+- **[`packages/server`](packages/server)** - `@hofi/server`, an internal
+  multi-user MFA verification service for gating company logins (AD-backed),
+  Phase 1 of a larger rollout also covering web SSO and Windows workstation
+  logon. See its README for setup, API reference, and the roadmap.
 
-## Installation
+Both share **[`packages/core`](packages/core)**, `@hofi/core`: the actual
+TOTP/HOTP algorithm (HMAC-SHA1/256/512 per RFC 4226/6238) and `otpauth://`
+URI parsing, built on nothing but Node's `crypto` module and verified against
+the official RFC 6238 test vectors.
+
+This is an npm workspaces monorepo - install and build once at the root.
+
+## Quick start
 
 ```bash
 npm install
-npm run build
-npm link   # optional: makes the `hofi` command available globally
+npm run build       # builds core, then cli and server
+npm test             # unit tests across all packages
+npm run test:integration  # server integration tests, needs a local Postgres
 ```
 
-Or run it directly without linking:
+## CLI usage
 
 ```bash
-npm run build
-node dist/cli.js <command>
+node packages/cli/dist/cli.js init                                   # create a vault
+node packages/cli/dist/cli.js add "alice@example.com" --secret ABC... --issuer GitHub
+node packages/cli/dist/cli.js code                                    # show current codes
 ```
 
-## Usage
+Or `npm link` inside `packages/cli` to get a global `hofi` command. Full
+command reference in [`packages/cli/README`](packages/cli) (inline `--help`).
 
-**Create a vault** (one-time setup, prompts for a master password):
+## Server usage
 
-```bash
-hofi init
-```
-
-**Add an account.** Either paste the `otpauth://` URI a service gives you
-when it shows you a 2FA QR code:
-
-```bash
-hofi add "alice@example.com" --uri "otpauth://totp/GitHub:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
-```
-
-...or enter the secret key manually (the "can't scan the code?" text option
-most services offer):
-
-```bash
-hofi add "alice@example.com" --secret JBSWY3DPEHPK3PXP --issuer GitHub
-```
-
-**Get a code:**
-
-```bash
-hofi code                    # show codes for all accounts
-hofi code alice@example.com  # show the code for one account
-hofi code --watch            # keep refreshing until Ctrl+C
-```
-
-**List, remove, export accounts:**
-
-```bash
-hofi list
-hofi remove alice@example.com
-hofi export alice@example.com   # prints the otpauth:// URI and a QR code,
-                                 # e.g. to move an account to your phone
-```
-
-**Change the master password:**
-
-```bash
-hofi passwd
-```
-
-Run `hofi --help` or `hofi <command> --help` for the full option list.
-
-## How it works
-
-- Codes are generated with the standard TOTP algorithm (HMAC-SHA1/256/512,
-  30-second time steps, 6+ digits) using Node's built-in `crypto` module —
-  no code-generation logic depends on third-party packages.
-- Accounts are stored at `~/.hofi-authenticator/vault.json`, encrypted with
-  AES-256-GCM. The encryption key is derived from your master password via
-  scrypt; the password itself is never stored.
-- The vault file is created with `0600` permissions (readable only by you).
+See [`packages/server/README.md`](packages/server/README.md) for setup
+(Postgres, root encryption key, AD/LDAP config), the API reference, and the
+Phase 1 known-risks/roadmap notes.
 
 ## Development
 
 ```bash
-npm run dev -- <command>   # run the CLI from TypeScript source via tsx
-npm test                   # run the unit test suite (vitest)
-npm run typecheck          # type-check without emitting
+npm run dev:cli -- <command>   # run the CLI from TypeScript source via tsx
+npm run dev:server              # run the server from TypeScript source via tsx
+npm run typecheck                # type-check the whole workspace (tsc -b)
 ```
-
-The test suite verifies the TOTP implementation against the official
-[RFC 6238 Appendix B test vectors](https://datatracker.ietf.org/doc/html/rfc6238#appendix-B)
-for SHA1, SHA256, and SHA512.
 
 ## Disclaimer
 
-This is a personal/educational 2FA tool. Review the code before relying on
-it to protect accounts you can't afford to lose access to, and keep a
-backup of your secrets (e.g. via `hofi export`) in case you lose the vault.
+The CLI is a personal/educational tool - review the code before relying on
+it for accounts you can't afford to lose access to. The server targets real
+internal infrastructure but is Phase 1 of a staged rollout; read its
+README's "Known risks" section before deploying it against production AD.

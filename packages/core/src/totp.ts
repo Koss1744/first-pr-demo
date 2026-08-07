@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { base32Decode } from "./base32.js";
 
 export type OtpAlgorithm = "SHA1" | "SHA256" | "SHA512";
@@ -60,4 +60,43 @@ export function totp(options: TotpOptions): string {
 export function secondsRemaining(period = 30, timestamp = Date.now()): number {
   const secondsIntoStep = Math.floor(timestamp / 1000) % period;
   return period - secondsIntoStep;
+}
+
+export interface MatchTotpWindowOptions {
+  digits?: number;
+  period?: number;
+  algorithm?: OtpAlgorithm;
+  /** Unix time in milliseconds to match against. Default: now. */
+  timestamp?: number;
+  /** How many time-steps before/after the current one to also accept, to absorb clock drift. Default 1. */
+  driftSteps?: number;
+}
+
+/**
+ * Checks a submitted code against a window of time-steps around now (to
+ * absorb clock drift between server and authenticator app), using a
+ * constant-time comparison per candidate to avoid a timing side channel.
+ * Returns the matched absolute time-step counter, or null if no step in
+ * the window matches - callers use the returned step as a replay watermark
+ * (only accept a step strictly greater than the last one seen for a user).
+ */
+export function matchTotpWindow(
+  secretBuffer: Buffer,
+  code: string,
+  { digits = 6, period = 30, algorithm = "SHA1", timestamp = Date.now(), driftSteps = 1 }: MatchTotpWindowOptions = {},
+): number | null {
+  const currentStep = Math.floor(Math.floor(timestamp / 1000) / period);
+  const codeBuffer = Buffer.from(code, "utf8");
+
+  for (let delta = -driftSteps; delta <= driftSteps; delta++) {
+    const step = currentStep + delta;
+    if (step < 0) {
+      continue;
+    }
+    const candidateBuffer = Buffer.from(hotp(secretBuffer, step, { digits, algorithm }), "utf8");
+    if (candidateBuffer.length === codeBuffer.length && timingSafeEqual(candidateBuffer, codeBuffer)) {
+      return step;
+    }
+  }
+  return null;
 }

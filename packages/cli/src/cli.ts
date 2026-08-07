@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import qrcode from "qrcode";
-import { totp, secondsRemaining } from "./totp.js";
-import { parseOtpauthUri, buildOtpauthUri, type Account } from "./otpauth.js";
+import { totp, secondsRemaining, parseOtpauthUri, buildOtpauthUri, type Account } from "@hofi/core";
 import {
   defaultVaultPath,
   vaultExists,
