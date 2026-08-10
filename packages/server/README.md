@@ -30,7 +30,9 @@ never generates or displays codes itself - it only verifies them.
    `HOFI_OIDC_COOKIE_KEYS`, `HOFI_OIDC_CLIENTS` (one entry per company web
    app) and `HOFI_OIDC_JWKS` (`npm run create-oidc-jwks -w @hofi/server`).
    Leave all four unset to run Phase 1 only - the OIDC provider isn't mounted
-   at all in that case. See [Web SSO (Phase 2)](#web-sso-phase-2) below.
+   at all in that case. See [Web SSO (Phase 2)](#web-sso-phase-2) below. Also
+   schedule `npm run reap-oidc-store -w @hofi/server` (e.g. hourly cron) to
+   delete expired sessions/tokens - nothing does this automatically.
 8. `npm run start -w @hofi/server`.
 
 ## API
@@ -71,7 +73,9 @@ to it for login instead of rolling its own AD+MFA form.
   codes, tokens, ...) is a generic Postgres-backed adapter
   (`src/oidc/adapter.ts`, migration `0005_create_oidc_store.sql`) - one table
   covers every model kind, since they all only need id/grant/user-code/uid
-  lookup.
+  lookup. Expired rows are hidden from lookups immediately but only actually
+  deleted by `npm run reap-oidc-store` - schedule that on a cron, see Setup
+  above.
 
 ## Known risks (Phase 1, tracked deliberately)
 

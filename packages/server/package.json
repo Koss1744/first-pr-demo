@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "migrate": "node dist/migrate.js",
     "create-client": "node dist/create-client.js",
-    "create-oidc-jwks": "node dist/create-oidc-jwks.js"
+    "create-oidc-jwks": "node dist/create-oidc-jwks.js",
+    "reap-oidc-store": "node dist/reap-oidc-store.js"
   },
   "files": ["dist", "migrations"],
   "license": "MIT",

@@ -81,6 +81,11 @@ export class LdapDirectory implements Directory {
   }
 
   async verifyCredentials(username: string, password: string): Promise<boolean> {
+    // Some directories treat a bind with a valid DN and an empty password as an RFC 4513
+    // "unauthenticated bind" success rather than a rejection - never let that authenticate.
+    if (!password) {
+      return false;
+    }
     const user = await this.lookupUser(username);
     if (!user?.dn) {
       return false;

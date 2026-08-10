@@ -41,7 +41,6 @@ interface TotpSecretRow {
   last_used_step: string | null; // bigint columns come back as strings from node-postgres
   confirm_attempts: number;
   confirmed_at: Date | null;
-  disabled_at: Date | null;
 }
 
 const MAX_CONFIRM_ATTEMPTS = 5;
@@ -285,7 +284,7 @@ export async function verifyUser(
     }
 
     const secretRes = await client.query<TotpSecretRow>(
-      "SELECT * FROM totp_secrets WHERE user_id = $1 AND confirmed_at IS NOT NULL AND disabled_at IS NULL FOR UPDATE",
+      "SELECT * FROM totp_secrets WHERE user_id = $1 AND confirmed_at IS NOT NULL FOR UPDATE",
       [user.id],
     );
     const secretRow = secretRes.rows[0];

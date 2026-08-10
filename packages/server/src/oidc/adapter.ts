@@ -79,3 +79,13 @@ class PostgresAdapter implements Adapter {
 export function createOidcAdapter(db: Database): AdapterFactory {
   return (modelName: string) => new PostgresAdapter(db, modelName);
 }
+
+/**
+ * Deletes rows past their expiry. find()/findByUid()/findByUserCode() already hide expired rows
+ * from oidc-provider, so this is purely about bounding table/index size over time - nothing
+ * calls it automatically, run it on a schedule (see reap-oidc-store.ts / the server README).
+ */
+export async function reapExpiredOidcModels(db: Database): Promise<number> {
+  const { rowCount } = await db.query("DELETE FROM oidc_model_store WHERE expires_at IS NOT NULL AND expires_at < now()");
+  return rowCount ?? 0;
+}

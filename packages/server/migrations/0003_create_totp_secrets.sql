@@ -23,7 +23,6 @@ CREATE TABLE totp_secrets (
   confirm_attempts    smallint NOT NULL DEFAULT 0, -- separate small cap for enroll/confirm, not shared with verify lockout
   enrolled_at         timestamptz NOT NULL DEFAULT now(),
   confirmed_at        timestamptz,               -- null until the user proves possession
-  disabled_at         timestamptz,
 
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()

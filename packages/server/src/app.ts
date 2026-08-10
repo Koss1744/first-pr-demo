@@ -29,6 +29,10 @@ export function createApp(db: Database, config: ServerConfig, directory: Directo
   // Phase 2 (web SSO) - only mounted when HOFI_OIDC_* is configured, so a Phase-1-only
   // deployment (no OIDC clients yet) is completely unaffected.
   if (config.oidc) {
+    // Matches provider.proxy = true below: this deployment is documented to run behind a
+    // TLS-offloading reverse proxy, so req.secure needs to trust X-Forwarded-Proto too -
+    // otherwise the pending-login cookie's Secure flag would always be false.
+    app.set("trust proxy", true);
     const provider = createOidcProvider(db, config, directory);
     app.use(oidcInteractionRouter(provider, db, config, directory));
     app.use(provider.callback());
