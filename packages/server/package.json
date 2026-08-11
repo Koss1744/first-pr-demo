@@ -1,0 +1,37 @@
+{
+  "name": "@hofi/server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HOFI Auth Server - internal MFA (TOTP) verification service for AD-backed logins",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "migrate": "node dist/migrate.js",
+    "create-client": "node dist/create-client.js",
+    "create-oidc-jwks": "node dist/create-oidc-jwks.js",
+    "reap-oidc-store": "node dist/reap-oidc-store.js"
+  },
+  "files": ["dist", "migrations"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@hofi/core": "^1.0.0",
+    "express": "^5.2.1",
+    "ldapjs": "^3.0.7",
+    "oidc-provider": "^9.5.5",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/ldapjs": "^3.0.6",
+    "@types/oidc-provider": "^9.11.1",
+    "@types/pg": "^8.20.4",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.2"
+  }
+}

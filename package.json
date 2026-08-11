@@ -1,0 +1,26 @@
+{
+  "name": "hofi-authenticator-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HOFI Authenticator - TOTP-based two-factor authentication: CLI, core library, and internal MFA verification server",
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "dev:server": "npm run dev -w @hofi/server",
+    "dev:cli": "npm run dev -w hofi-authenticator",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc -b"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}
