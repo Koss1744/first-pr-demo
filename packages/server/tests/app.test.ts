@@ -113,3 +113,28 @@ describe("app - request validation", () => {
   });
 
 });
+
+describe("app - counterparty registry", () => {
+  it("rejects an MFA-only key on the registry", async () => {
+    const app = createApp(createFakeDb(), testConfig(), new InMemoryDirectory());
+    const res = await request(app).get("/api/v1/counterparties").set("Authorization", `Bearer ${VALID_KEY}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("POST /counterparties without an operator returns 400", async () => {
+    const app = createApp(createFakeDb(["counterparties:write"]), testConfig(), new InMemoryDirectory());
+    const res = await request(app)
+      .post("/api/v1/counterparties")
+      .set("Authorization", `Bearer ${VALID_KEY}`)
+      .send({ kind: "legal_entity", name: "ООО Ромашка" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("operator_required");
+  });
+
+  it("GET /counterparties with an unknown status filter returns 400", async () => {
+    const app = createApp(createFakeDb(["counterparties:read"]), testConfig(), new InMemoryDirectory());
+    const res = await request(app).get("/api/v1/counterparties?status=deleted").set("Authorization", `Bearer ${VALID_KEY}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("invalid_status");
+  });
+});

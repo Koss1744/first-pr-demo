@@ -48,7 +48,68 @@ All endpoints are under `/api/v1` and authenticate via
 | `POST /verify` | `verify` | The endpoint everything else depends on - `{username, code}` -> `{result, reason?}` |
 | `POST /admin/{unlock,reset,disable,enable}` | `admin` | Helpdesk operations |
 | `GET /admin/audit` | `admin` | Filterable audit trail |
+| `GET /counterparties` | `counterparties:read` | Search/filter/page the counterparty registry |
+| `GET /counterparties/{id}` | `counterparties:read` | One counterparty |
+| `POST /counterparties` | `counterparties:write` | Add a counterparty (requisites are validated) |
+| `PATCH /counterparties/{id}` | `counterparties:write` | Change some of its fields |
+| `POST /counterparties/{id}/status` | `counterparties:write` | Block / archive / reactivate |
 | `GET /healthz` | none | Liveness + DB check |
+
+## Counterparty registry
+
+`/api/v1/counterparties` is the registry of organizations and people the
+company does business with (реестр контрагентов) - the requisites documents
+are drawn up from. It shares this service's database, API-key auth and audit
+log, but nothing else: the MFA scopes give no access to it and its scopes give
+no access to MFA.
+
+**Kinds** decide which registration identifiers a row must carry:
+
+| `kind` | ИНН | КПП | ОГРН |
+|---|---|---|---|
+| `legal_entity` - организация | required, 10 digits | required | required, 13 digits |
+| `sole_proprietor` - ИП | required, 12 digits | rejected | required, 15 digits (ОГРНИП) |
+| `individual` - физлицо | optional, 12 digits | rejected | rejected |
+| `foreign` - нерезидент | rejected | rejected | rejected (needs a non-`RU` `countryCode`) |
+
+Everything is checksum-verified, not just shape-checked: ИНН and ОГРН against
+the ФНС algorithms, `bankAccount`/`corrAccount` against `bankBic` with the ЦБ
+РФ key algorithm (so an account pasted under the wrong bank is rejected). A
+rejected request answers `400 {"error":"validation_failed","issues":[...]}`
+with one `{field, code}` per problem, so a form can mark up every bad field at
+once instead of one per round-trip.
+
+**Identity is the (ИНН, КПП) pair**, not ИНН alone - a branch shares its head
+office's ИНН. A collision answers `409 {"error":"duplicate_inn_kpp","existingId":...}`;
+that holds against archived rows too, so a counterparty that was archived is
+reactivated rather than re-added.
+
+**Statuses** are `active`, `blocked` (compliance hold, debt) and `archived`.
+Any transition is allowed and the audit row records the `reason`. Rows are
+never deleted - contracts and invoices reference them long after the
+relationship ends.
+
+```bash
+# a key that may read and write the registry, and nothing else
+npm run create-client -w @hofi/server -- back-office "Back-office registry UI" \
+  counterparties:read counterparties:write
+
+curl -sX POST http://localhost:3000/api/v1/counterparties \
+  -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' \
+  -d '{"operator":"buh.ivanova","kind":"legal_entity","name":"ПАО Сбербанк",
+       "inn":"7707083893","kpp":"773601001","ogrn":"1027700132195"}'
+
+curl -s "http://localhost:3000/api/v1/counterparties?search=сбербанк&status=active&limit=20&offset=0" \
+  -H "Authorization: Bearer $KEY"
+```
+
+`GET /counterparties` returns `{items, total, limit, offset}`. `search` matches
+a name substring, or an exact ИНН/ОГРН when the term is all digits; `status`,
+`kind` and `inn` filter; `limit` defaults to 50 and is capped at 200. Every
+write requires an `operator` (who is making the change) and lands in
+`audit_log` as `counterparty_create` / `counterparty_update` /
+`counterparty_status`, visible through `GET /admin/audit`.
+
 
 ## Web SSO (Phase 2)
 
@@ -111,6 +172,14 @@ to it for login instead of rolling its own AD+MFA form.
 - **(Phase 2) No dynamic client registration or per-client redirect URI
   admin UI.** `HOFI_OIDC_CLIENTS` is a static, redeploy-to-change list -
   fine for a handful of internal apps, not for self-service onboarding.
+- **(Registry) Requisites are checked for internal consistency, not against
+  reality.** A checksum-valid ИНН that belongs to nobody, or to a different
+  company than the name says, is accepted - nothing here queries ЕГРЮЛ/ЕГРИП.
+  Verifying a counterparty actually exists is still a human step.
+- **(Registry) Name search is a substring scan.** `search=ромашка` runs
+  `ILIKE '%...%'`, which no index can serve; at registry sizes (thousands of
+  rows) that is a few milliseconds, but it will not scale to millions without
+  a trigram index or a search service.
 
 ## Roadmap
 
@@ -118,6 +187,10 @@ to it for login instead of rolling its own AD+MFA form.
   (`oidc-provider`) wraps the verification API so company web apps get MFA
   via standard OIDC, with AD password checked via
   `Directory.verifyCredentials`. See [Web SSO (Phase 2)](#web-sso-phase-2).
+- **Counterparty registry:** contract and invoice records referencing a
+  counterparty, and an import path for a spreadsheet of existing ones (the
+  validators in `src/counterparties/requisites.ts` are already usable
+  standalone for that).
 - **Phase 3 (Windows workstation logon):** a custom Windows Credential
   Provider calling `POST /verify`. This is native Windows/COM development
   requiring code-signing and a staged GPO rollout - out of scope for this

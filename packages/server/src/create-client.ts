@@ -2,13 +2,13 @@ import { generateApiKey } from "./crypto/apiKey.js";
 import { loadConfig } from "./config.js";
 import { createPool } from "./db.js";
 
-const VALID_SCOPES = new Set(["enroll", "verify", "admin"]);
+const VALID_SCOPES = new Set(["enroll", "verify", "admin", "counterparties:read", "counterparties:write"]);
 
 async function main(): Promise<void> {
   const [clientId, description, ...scopes] = process.argv.slice(2);
   if (!clientId || !description || scopes.length === 0 || scopes.some((s) => !VALID_SCOPES.has(s))) {
     console.error("Usage: node dist/create-client.js <clientId> <description> <scope...>");
-    console.error("  scopes: enroll | verify | admin (space-separated, at least one)");
+    console.error("  scopes: enroll | verify | admin | counterparties:read | counterparties:write (space-separated, at least one)");
     process.exit(1);
   }
 

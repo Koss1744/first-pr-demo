@@ -12,7 +12,10 @@ export interface AuditEvent {
     | "admin_reset"
     | "admin_disable"
     | "admin_enable"
-    | "client_auth_fail";
+    | "client_auth_fail"
+    | "counterparty_create"
+    | "counterparty_update"
+    | "counterparty_status";
   userId?: string | null;
   username?: string | null;
   clientId: string;

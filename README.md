@@ -10,7 +10,10 @@ two-factor authentication, in two forms:
   multi-user MFA verification service for gating company logins (AD-backed),
   plus an optional OIDC identity provider for web SSO. Phase 1 (verification
   API) and Phase 2 (web SSO) are both implemented; Windows workstation logon
-  is still ahead. See its README for setup, API reference, and the roadmap.
+  is still ahead. It also hosts the **counterparty registry** (реестр
+  контрагентов) at `/api/v1/counterparties` - back-office data with its own
+  scopes, sharing this service's database and audit log. See its README for
+  setup, API reference, and the roadmap.
 
 Both share **[`packages/core`](packages/core)**, `@hofi/core`: the actual
 TOTP/HOTP algorithm (HMAC-SHA1/256/512 per RFC 4226/6238) and `otpauth://`

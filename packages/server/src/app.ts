@@ -5,6 +5,7 @@ import type { Database } from "./db.js";
 import type { Directory } from "./directory/types.js";
 import { createOidcProvider } from "./oidc/provider.js";
 import { adminRouter } from "./routes/admin.js";
+import { counterpartyRouter } from "./routes/counterparties.js";
 import { enrollRouter } from "./routes/enroll.js";
 import { healthRouter } from "./routes/health.js";
 import { oidcInteractionRouter } from "./routes/oidc-interactions.js";
@@ -25,6 +26,7 @@ export function createApp(db: Database, config: ServerConfig, directory: Directo
   app.use("/api/v1", enrollRouter(db, config, directory));
   app.use("/api/v1", verifyRouter(db, config));
   app.use("/api/v1", adminRouter(db));
+  app.use("/api/v1", counterpartyRouter(db));
 
   // Phase 2 (web SSO) - only mounted when HOFI_OIDC_* is configured, so a Phase-1-only
   // deployment (no OIDC clients yet) is completely unaffected.
