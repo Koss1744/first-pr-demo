@@ -1,0 +1,28 @@
+{
+  "_comment": "Шаблон заявки по умолчанию. Источник: docs/glpi/requirements.md R1-FRM-01..04, docs/glpi/sla-matrix.md 2.1. Номера полей (num) НЕ захардкожены: скрипт резолвит их через GET /listSearchOptions/Ticket по паре table+field и сверяет с expected_num. Это защита от расхождения нумерации между сборками GLPI.",
+  "template": {
+    "name": "HOFI Base",
+    "comment": "Шаблон по умолчанию Релиза 1. Обязательные: категория, тема, описание. Скрыты: влияние, тип, исполнитель, SLA. По умолчанию: влияние и срочность = Средний(3).",
+    "is_recursive": 1
+  },
+  "fields": {
+    "title":        {"label": "Заголовок (Тема)",              "table": "glpi_tickets",        "field": "name",         "expected_num": 1},
+    "content":      {"label": "Описание",                      "table": "glpi_tickets",        "field": "content",      "expected_num": 21},
+    "category":     {"label": "Категория",                     "table": "glpi_itilcategories", "field": "completename", "expected_num": 7},
+    "urgency":      {"label": "Срочность",                     "table": "glpi_tickets",        "field": "urgency",      "expected_num": 10},
+    "impact":       {"label": "Влияние",                       "table": "glpi_tickets",        "field": "impact",       "expected_num": 11},
+    "type":         {"label": "Тип (инцидент/запрос)",         "table": "glpi_tickets",        "field": "type",         "expected_num": 14},
+    "assign_user":  {"label": "Исполнитель — техник",          "table": "glpi_users",          "field": "name",         "linkfield": "users_id_assign",  "expected_num": 5},
+    "assign_group": {"label": "Исполнитель — группа",          "table": "glpi_groups",         "field": "completename", "linkfield": "groups_id_assign", "expected_num": 8},
+    "sla_tto":      {"label": "SLA — время взятия в работу",   "table": "glpi_slas",           "field": "name",         "linkfield": "slas_id_tto",      "expected_num": 37},
+    "sla_ttr":      {"label": "SLA — время решения",           "table": "glpi_slas",           "field": "name",         "linkfield": "slas_id_ttr",      "expected_num": 30}
+  },
+  "mandatory": ["category", "title", "content"],
+  "hidden": ["impact", "type", "sla_tto", "sla_ttr"],
+  "_hidden_verify_comment": "Поля исполнителя скрываются от заявителя, но в GLPI 10 скрытие действует и на форму создания в стандартном интерфейсе. Если после применения первая линия не может назначить исполнителя ПРИ СОЗДАНИИ — снимите эти два поля из скрытых либо заведите второй шаблон 'HOFI L1' без них (см. setup-release1.md, шаг 11, замечание 11.4). Назначение уже созданной заявки этим не блокируется.",
+  "hidden_verify": ["assign_user", "assign_group"],
+  "predefined": [
+    {"field": "impact",  "value": "3", "_comment": "Среднее — пользователь влияние не выбирает"},
+    {"field": "urgency", "value": "3", "_comment": "Средняя — значение по умолчанию, пользователь может изменить"}
+  ]
+}

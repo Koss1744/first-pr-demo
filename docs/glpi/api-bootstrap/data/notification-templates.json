@@ -1,0 +1,47 @@
+{
+  "_comment": "Шаблоны писем (объект NotificationTemplate + NotificationTemplateTranslation). Источник: docs/glpi/requirements.md R1-NTF-02..07. ВАЖНО: скрипт создаёт ТОЛЬКО шаблоны. Сами уведомления (объект Notification) с событиями и получателями заводятся руками — см. setup-release1.md, шаг 18 и раздел «Что скрипт сознательно не делает».",
+  "_tags_comment": "Набор тегов различается между версиями GLPI. После создания откройте карточку шаблона и нажмите «Список тегов» — сверьте, что использованные теги есть в списке. Неизвестный тег не подставляется и уходит в письмо как текст.",
+  "language": "ru_RU",
+  "templates": [
+    {
+      "key": "registered",
+      "name": "HOFI — Заявка зарегистрирована",
+      "itemtype": "Ticket",
+      "comment": "Событие «Новая заявка». Получатель: Заявитель.",
+      "subject": "Заявка ###ticket.id## принята: ##ticket.title##",
+      "content_text": "Здравствуйте, ##ticket.author##!\n\nВаше обращение зарегистрировано.\n\nНомер заявки: ##ticket.id##\nТема: ##ticket.title##\nКатегория: ##ticket.category##\nДата регистрации: ##ticket.creationdate##\n\nЧто дальше: специалист поддержки возьмёт заявку в работу и свяжется с вами.\nСледить за ходом работ и добавлять уточнения можно по ссылке:\n##ticket.url##\n\nОтвечать на это письмо можно — ваш ответ добавится в заявку комментарием.\nПожалуйста, не меняйте тему письма: по ней определяется номер заявки.\n\nСлужба поддержки HOFI"
+    },
+    {
+      "key": "followup",
+      "name": "HOFI — Добавлен комментарий по заявке",
+      "itemtype": "Ticket",
+      "comment": "Событие «Добавлено наблюдение/комментарий». Получатель: Заявитель. Приватные комментарии техников не рассылаются самим GLPI.",
+      "subject": "Заявка ###ticket.id##: новый комментарий",
+      "content_text": "Здравствуйте, ##ticket.author##!\n\nПо вашей заявке ###ticket.id## «##ticket.title##» добавлен комментарий:\n\n##FOREACHlastfollowups##\n##ticket.followup.date## — ##ticket.followup.author##:\n##ticket.followup.description##\n##ENDFOREACHlastfollowups##\n\nОтветить можно письмом на это сообщение или на портале:\n##ticket.url##\n\nСлужба поддержки HOFI"
+    },
+    {
+      "key": "solved",
+      "name": "HOFI — Заявка решена",
+      "itemtype": "Ticket",
+      "comment": "Событие «Заявка решена». Получатель: Заявитель.",
+      "subject": "Заявка ###ticket.id## решена: ##ticket.title##",
+      "content_text": "Здравствуйте, ##ticket.author##!\n\nПо заявке ###ticket.id## «##ticket.title##» предложено решение:\n\n##ticket.solution.description##\n\nЕсли всё в порядке — ничего делать не нужно: заявка закроется автоматически через 7 дней.\nЕсли проблема осталась — откройте заявку и нажмите «Отклонить решение», либо ответьте на это письмо:\n##ticket.url##\n\nСлужба поддержки HOFI"
+    },
+    {
+      "key": "assign_group",
+      "name": "HOFI — Заявка назначена на группу",
+      "itemtype": "Ticket",
+      "comment": "Событие «Заявка назначена» / «Обновление заявки». Получатель: Группа — назначенная.",
+      "subject": "[##ticket.priority##] Заявка ###ticket.id## назначена на вашу группу",
+      "content_text": "На группу ##ticket.assigntogroups## назначена заявка.\n\nНомер: ##ticket.id##\nТема: ##ticket.title##\nЗаявитель: ##ticket.author##\nКатегория: ##ticket.category##\nПриоритет: ##ticket.priority##\nВзять в работу до: ##ticket.time_to_own##\nРешить до: ##ticket.time_to_resolve##\n\nОписание:\n##ticket.content##\n\nОткрыть заявку: ##ticket.url##"
+    },
+    {
+      "key": "sla_breach",
+      "name": "HOFI — Нарушен срок решения",
+      "itemtype": "Ticket",
+      "comment": "Используется в уровнях эскалации SLA (SlaLevel). Получатели: Руководитель ИТ + Группа — назначенная.",
+      "subject": "ПРОСРОЧКА: заявка ###ticket.id## — ##ticket.title##",
+      "content_text": "Нарушен (или вот-вот будет нарушен) срок решения заявки.\n\nНомер: ##ticket.id##\nТема: ##ticket.title##\nЗаявитель: ##ticket.author##\nКатегория: ##ticket.category##\nПриоритет: ##ticket.priority##\nНазначена на: ##ticket.assigntogroups## / ##ticket.assigntousers##\nСрок решения: ##ticket.time_to_resolve##\nТекущий статус: ##ticket.status##\n\nОткрыть заявку: ##ticket.url##"
+    }
+  ]
+}

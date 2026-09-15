@@ -1,0 +1,26 @@
+{
+  "_comment": "Дерево категорий заявок. Источник: docs/glpi/categories.md. Родители не видны пользователю (is_helpdeskvisible=0), листья видны. group — код целевой группы в терминах варианта 'four'; при --groups-variant two он сворачивается по карте collapse_to_two из groups.json.",
+  "parents": [
+    {"name": "Компьютер и оргтехника", "is_helpdeskvisible": 0},
+    {"name": "Программы и приложения", "is_helpdeskvisible": 0},
+    {"name": "Доступы и учётная запись", "is_helpdeskvisible": 0},
+    {"name": "Сеть и связь", "is_helpdeskvisible": 0}
+  ],
+  "leaves": [
+    {"name": "Не включается / не работает компьютер", "parent": "Компьютер и оргтехника", "group": "IT-WS", "is_incident": 1, "is_request": 0},
+    {"name": "Монитор, клавиатура, мышь, гарнитура", "parent": "Компьютер и оргтехника", "group": "IT-WS", "is_incident": 1, "is_request": 0},
+    {"name": "Принтер, сканер, печать", "parent": "Компьютер и оргтехника", "group": "IT-WS", "is_incident": 1, "is_request": 0},
+    {"name": "Выдача техники (новая, замена, ремонт)", "parent": "Компьютер и оргтехника", "group": "IT-WS", "is_incident": 0, "is_request": 1},
+    {"name": "Картриджи и расходные материалы", "parent": "Компьютер и оргтехника", "group": "IT-WS", "is_incident": 0, "is_request": 1},
+    {"name": "Установить или обновить программу", "parent": "Программы и приложения", "group": "IT-APP", "is_incident": 0, "is_request": 1},
+    {"name": "Программа не работает, ошибка", "parent": "Программы и приложения", "group": "IT-APP", "is_incident": 1, "is_request": 0},
+    {"name": "1С", "parent": "Программы и приложения", "group": "IT-APP", "is_incident": 1, "is_request": 1},
+    {"name": "Почта и календарь", "parent": "Программы и приложения", "group": "IT-APP", "is_incident": 1, "is_request": 1},
+    {"name": "Пароль, блокировка учётной записи", "parent": "Доступы и учётная запись", "group": "IT-INF", "is_incident": 1, "is_request": 0},
+    {"name": "Доступ к папке, диску, системе", "parent": "Доступы и учётная запись", "group": "IT-INF", "is_incident": 0, "is_request": 1},
+    {"name": "Новый сотрудник / увольнение / перевод", "parent": "Доступы и учётная запись", "group": "IT-INF", "is_incident": 0, "is_request": 1},
+    {"name": "Интернет, сеть, Wi-Fi", "parent": "Сеть и связь", "group": "IT-INF", "is_incident": 1, "is_request": 0},
+    {"name": "Телефония и видеоконференции", "parent": "Сеть и связь", "group": "IT-INF", "is_incident": 1, "is_request": 1},
+    {"name": "Другое / не знаю, к чему отнести", "parent": null, "group": "SD-L1", "is_incident": 1, "is_request": 1}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "_comment": "SLM + 6 SLA. Источник: docs/glpi/sla-matrix.md, раздел 2.4. type: 0 = TTO (время до взятия в работу), 1 = TTR (время до решения) — константы SLM::TTO / SLM::TTR в GLPI 10. После применения проверить в UI, что тип каждого SLA распознан правильно.",
+  "slm": {
+    "name": "HOFI Base 5x9",
+    "comment": "Базовое соглашение Релиза 1. Календарь HOFI 5x9, расчёт в рабочих часах.",
+    "calendar": "HOFI 5x9",
+    "is_recursive": 1
+  },
+  "_definition_time": "minute | hour | day. end_of_working_day=0 — не округлять до конца рабочего дня.",
+  "slas": [
+    {"name": "TTO High",   "type": 0, "number_time": 30, "definition_time": "minute", "comment": "Реакция, приоритет Высокий"},
+    {"name": "TTR High",   "type": 1, "number_time": 4,  "definition_time": "hour",   "comment": "Решение, приоритет Высокий"},
+    {"name": "TTO Medium", "type": 0, "number_time": 2,  "definition_time": "hour",   "comment": "Реакция, приоритет Средний"},
+    {"name": "TTR Medium", "type": 1, "number_time": 8,  "definition_time": "hour",   "comment": "Решение, приоритет Средний (1 рабочий день)"},
+    {"name": "TTO Low",    "type": 0, "number_time": 4,  "definition_time": "hour",   "comment": "Реакция, приоритет Низкий"},
+    {"name": "TTR Low",    "type": 1, "number_time": 24, "definition_time": "hour",   "comment": "Решение, приоритет Низкий (3 рабочих дня)"}
+  ]
+}

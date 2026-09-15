@@ -1,0 +1,12 @@
+{
+  "_comment": "Профили НЕ создаются скриптом. Причина: клонирование штатного профиля — операция интерфейса, а сборка прав через ProfileRight по одному биту даёт профиль, который невозможно сверить с эталоном. Профили создаются руками клонированием (setup-release1.md, шаг 9). Здесь — эталон для команды 'verify': скрипт только читает и сообщает о расхождениях.",
+  "stock_profiles_must_be_untouched": ["Self-Service", "Observer", "Admin", "Super-Admin", "Hotliner", "Technician", "Supervisor", "Read-Only"],
+  "expected": [
+    {"name": "HOFI L1",         "interface": "central",  "is_default": 0, "based_on": "Technician",   "note": "Заявки: просмотр «Все», без удаления. Активы: только чтение."},
+    {"name": "HOFI IT",         "interface": "central",  "is_default": 0, "based_on": "Technician",   "note": "Как L1 + запись в активы + публикация БЗ."},
+    {"name": "HOFI Contractor", "interface": "helpdesk", "is_default": 0, "based_on": "Self-Service", "note": "Назначается точечно в сущность «HOFI / Подрядчики», нерекурсивно."},
+    {"name": "HOFI Service",    "interface": "central",  "is_default": 0, "based_on": "с нуля",       "note": "Учётки интеграций. Минимум прав под задачу."},
+    {"name": "Self-Service",    "interface": "helpdesk", "is_default": 1, "based_on": "штатный",      "note": "Профиль по умолчанию. Не редактировать."}
+  ],
+  "max_super_admin_users": 2
+}

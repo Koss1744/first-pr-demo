@@ -1,0 +1,60 @@
+{
+  "_comment": "Группы исполнителей. Источник: docs/glpi/categories.md, раздел «Группы ответственности». Вариант 'two' / 'four' выбирается ключом --groups-variant, см. setup-release1.md, раздел «Две группы или четыре».",
+  "variants": {
+    "two": ["SD-L1", "IT-ALL"],
+    "four": ["SD-L1", "IT-WS", "IT-INF", "IT-APP"]
+  },
+  "groups": {
+    "SD-L1": {
+      "name": "SD-L1 — Сервис-деск (1-я линия)",
+      "comment": "Приём, классификация, типовые решения. Резервная группа маршрутизации.",
+      "is_assign": 1,
+      "is_watcher": 1,
+      "is_requester": 0,
+      "is_notify": 1,
+      "is_recursive": 1
+    },
+    "IT-ALL": {
+      "name": "IT-ALL — ИТ (2-я линия)",
+      "comment": "Единая вторая линия Релиза 1. В Релизе 2 делится на IT-WS / IT-INF / IT-APP.",
+      "is_assign": 1,
+      "is_watcher": 1,
+      "is_requester": 0,
+      "is_notify": 1,
+      "is_recursive": 1
+    },
+    "IT-WS": {
+      "name": "IT-WS — ИТ: Рабочие места",
+      "comment": "ПК, периферия, печать, ОС.",
+      "is_assign": 1,
+      "is_watcher": 1,
+      "is_requester": 0,
+      "is_notify": 1,
+      "is_recursive": 1
+    },
+    "IT-INF": {
+      "name": "IT-INF — ИТ: Инфраструктура и сеть",
+      "comment": "Сеть, Wi-Fi, серверы, телефония, учётные записи.",
+      "is_assign": 1,
+      "is_watcher": 1,
+      "is_requester": 0,
+      "is_notify": 1,
+      "is_recursive": 1
+    },
+    "IT-APP": {
+      "name": "IT-APP — ИТ: Приложения и 1С",
+      "comment": "Бизнес-приложения, 1С, почтовые сервисы.",
+      "is_assign": 1,
+      "is_watcher": 1,
+      "is_requester": 0,
+      "is_notify": 1,
+      "is_recursive": 1
+    }
+  },
+  "collapse_to_two": {
+    "SD-L1": "SD-L1",
+    "IT-WS": "IT-ALL",
+    "IT-INF": "IT-ALL",
+    "IT-APP": "IT-ALL"
+  }
+}
