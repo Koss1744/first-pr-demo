@@ -255,8 +255,11 @@ AD-группы импортированы в GLPI (6.2) → критерий п
 `(LDAP) memberOf`, по нему матчатся DN групп регулярным выражением:
 
 ```
-/CN=GLPI-Technicians,OU=Groups,DC=hofi,DC=local/i
+/CN=GLPI-Technicians,OU=Groups,DC=hofi,DC=local/
 ```
+
+Шаблон пишется с ограничителями `/…/`; модификаторы `s` и `i` GLPI
+добавляет сам, поэтому регистр DN значения не имеет, а дублировать `i` не нужно.
 
 По умолчанию в GLPI заведены критерии `(LDAP)Organization` (`o`),
 `(LDAP)Common Name` (`cn`), `(LDAP)Department Number`, `(LDAP)Email`,
