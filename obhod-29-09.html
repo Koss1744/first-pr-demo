@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обход 29.09 — Газетный, 17</title>
+<style>
+  :root{
+    color-scheme: light;
+    --surface:      #fcfcfb;
+    --plane:        #f9f9f7;
+    --ink:          #0b0b0b;
+    --ink-2:        #52514e;
+    --muted:        #898781;
+    --grid:         #e1e0d9;
+    --border:       rgba(11,11,11,0.10);
+    --accent:       #2a78d6;
+    --good:         #0ca30c;
+    --good-bg:      #e6f6e6;
+    --warning:      #b8790a;
+    --warning-bg:   #fdf1d9;
+    --serious:      #c65a2e;
+    --serious-bg:   #fbe6dc;
+    --critical:     #d03b3b;
+    --critical-bg:  #fbe2e2;
+    --stale-bg:     #efeee9;
+    --stale-ink:    #9a988f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --surface:      #1a1a19;
+      --plane:        #0d0d0d;
+      --ink:          #ffffff;
+      --ink-2:        #c3c2b7;
+      --muted:        #898781;
+      --grid:         #2c2c2a;
+      --border:       rgba(255,255,255,0.10);
+      --accent:       #3987e5;
+      --good:         #0ca30c;
+      --good-bg:      #12271a;
+      --warning:      #fab219;
+      --warning-bg:   #2e2410;
+      --serious:      #ec835a;
+      --serious-bg:   #301f15;
+      --critical:     #e66767;
+      --critical-bg:  #341717;
+      --stale-bg:     #232320;
+      --stale-ink:    #6f6d66;
+    }
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 28px 16px 48px;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:24px; }
+
+  header{ display:flex; flex-direction:column; gap:6px; }
+  header .eyebrow{
+    font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color: var(--accent);
+  }
+  header h1{ margin:0; font-size:clamp(22px,4vw,30px); line-height:1.2; }
+  header p{ margin:0; color: var(--ink-2); font-size:14px; max-width:65ch; }
+
+  .tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  @media (max-width:700px){ .tiles{ grid-template-columns:repeat(2,1fr); } }
+  .tile{
+    background: var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; display:flex; flex-direction:column; gap:4px;
+  }
+  .tile .label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .tile .value{ font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .tile .sub{ font-size:12px; color:var(--ink-2); }
+  .tile.flag .value{ color: var(--critical); }
+
+  section.card{
+    background: var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:20px; display:flex; flex-direction:column; gap:14px;
+  }
+  section.card h2{ margin:0; font-size:16px; }
+  section.card .desc{ margin:0; color:var(--ink-2); font-size:13px; }
+
+  .heatmap{ overflow-x:auto; }
+  table.grid{ border-collapse:collapse; width:100%; min-width:520px; }
+  table.grid th, table.grid td{ text-align:center; padding:0; }
+  table.grid thead th{
+    font-size:12px; font-weight:600; color:var(--ink-2); padding:0 6px 8px;
+    border-bottom:1px solid var(--grid);
+  }
+  table.grid thead th:first-child{ text-align:left; }
+  table.grid tbody th{
+    text-align:left; font-size:13px; font-weight:600; color:var(--ink);
+    padding:6px 10px 6px 0; white-space:nowrap;
+  }
+  .cell{ padding:4px; }
+  .cell-box{
+    border-radius:8px; padding:10px 6px; min-height:58px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-variant-numeric:tabular-nums;
+  }
+  .cell-box .n{ font-size:19px; font-weight:700; }
+  .cell-box .t{ font-size:10.5px; color:var(--ink-2); }
+  .cell-box.good{ background:var(--good-bg); color:var(--good); }
+  .cell-box.good .t{ color:var(--good); opacity:.75; }
+  .cell-box.warning{ background:var(--warning-bg); color:var(--warning); }
+  .cell-box.warning .t{ color:var(--warning); opacity:.8; }
+  .cell-box.serious{ background:var(--serious-bg); color:var(--serious); }
+  .cell-box.serious .t{ color:var(--serious); opacity:.8; }
+  .cell-box.critical{ background:var(--critical-bg); color:var(--critical); }
+  .cell-box.critical .t{ color:var(--critical); opacity:.85; }
+  .cell-box.stale{
+    background: repeating-linear-gradient(45deg, var(--stale-bg), var(--stale-bg) 6px, var(--surface) 6px, var(--surface) 12px);
+    color: var(--stale-ink);
+  }
+  .cell-box.stale .n{ font-size:12px; font-weight:600; }
+  .cell-box.empty{ background:transparent; border:1px dashed var(--border); color:var(--muted); }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--ink-2); }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+  .legend i.good{ background:var(--good); }
+  .legend i.warning{ background:var(--warning); }
+  .legend i.serious{ background:var(--serious); }
+  .legend i.critical{ background:var(--critical); }
+  .legend i.stale{ background: repeating-linear-gradient(45deg, var(--stale-ink), var(--stale-ink) 3px, transparent 3px, transparent 6px); opacity:.6; }
+
+  .callout{
+    display:flex; gap:10px; align-items:flex-start;
+    background: var(--warning-bg); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; font-size:13px; color:var(--ink-2);
+  }
+  .callout b{ color:var(--ink); }
+  .callout .icon{ font-size:16px; line-height:1.4; }
+
+  .detail{ overflow-x:auto; }
+  table.detail-table{ border-collapse:collapse; width:100%; font-size:13px; min-width:640px; }
+  table.detail-table th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--grid);
+  }
+  table.detail-table td{ padding:8px 10px; border-bottom:1px solid var(--grid); color:var(--ink-2); vertical-align:top; }
+  table.detail-table td.num{ font-variant-numeric:tabular-nums; color:var(--ink); font-weight:600; text-align:center; }
+  table.detail-table td.floor{ color:var(--ink); font-weight:600; white-space:nowrap; }
+
+  table.avg-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.avg-table th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--grid);
+  }
+  table.avg-table td{ padding:8px 10px; border-bottom:1px solid var(--grid); color:var(--ink-2); }
+  table.avg-table td.num{ font-variant-numeric:tabular-nums; color:var(--ink); font-weight:600; text-align:center; }
+  table.avg-table td.floor{ color:var(--ink); font-weight:600; white-space:nowrap; }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600;
+    padding:2px 8px; border-radius:100px; white-space:nowrap;
+  }
+  .pill.good{ background:var(--good-bg); color:var(--good); }
+  .pill.warning{ background:var(--warning-bg); color:var(--warning); }
+  .pill.serious{ background:var(--serious-bg); color:var(--serious); }
+  .pill.critical{ background:var(--critical-bg); color:var(--critical); }
+  .pill.stale{ background:var(--stale-bg); color:var(--stale-ink); }
+
+  footer{ font-size:12px; color:var(--muted); text-align:center; padding-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Газетный, 17 · обход 29.09</div>
+    <h1>Проверка связи пингами до 8.8.8.8 по этажам</h1>
+    <p>Пять замеров за день (9:00, ~11:20, ~13:10, ~16:10, ~17:30), этажи 2–8. В каждом замере — по 500 пингов
+      (<code>ping -n 500</code>) на этаж; метрика — сколько из них не получили ответ (таймаут, «Превышен интервал
+      ожидания для запроса») и процент потерь от общего числа. Данные и скрины лежат рядом, в папке <code>data\29.09</code>.</p>
+  </header>
+
+  <section class="card">
+    <h2>Средняя статистика по этажам</h2>
+    <p class="desc">Усреднено по всем пяти замерам за день — материала мало, поэтому средняя по этажу надёжнее,
+      чем отдельная точка. % потерь считается от суммы пингов всех замеров этажа.</p>
+    <div class="detail">
+      <table class="avg-table">
+        <thead><tr><th>Этаж</th><th>Замеров всего</th><th>С данными</th><th>Среднее таймаутов</th><th>% потерь</th><th>Мин–макс</th></tr></thead>
+        <tbody>
+<tr><td class="floor">2 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">0.6</td><td class="num">0.1%</td><td class="num">0–2</td></tr>
+<tr><td class="floor">3 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">1.6</td><td class="num">0.3%</td><td class="num">1–2</td></tr>
+<tr><td class="floor">4 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">1.2</td><td class="num">0.2%</td><td class="num">0–2</td></tr>
+<tr><td class="floor">5 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">1.2</td><td class="num">0.2%</td><td class="num">0–3</td></tr>
+<tr><td class="floor">6 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">1.0</td><td class="num">0.2%</td><td class="num">0–3</td></tr>
+<tr><td class="floor">7 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">1.4</td><td class="num">0.3%</td><td class="num">0–3</td></tr>
+<tr><td class="floor">8 этаж</td><td class="num">5</td><td class="num">5</td><td class="num">0.4</td><td class="num">0.1%</td><td class="num">0–1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="label">Проверок сделано</div>
+      <div class="value">35</div>
+      <div class="sub">5 замеров, по 7 этажей каждый</div>
+    </div>
+    <div class="tile">
+      <div class="label">Всего таймаутов</div>
+      <div class="value">37</div>
+      <div class="sub">из 17500 пингов (0.21%)</div>
+    </div>
+    <div class="tile flag">
+      <div class="label">С потерей пакетов</div>
+      <div class="value">22 из 35</div>
+      <div class="sub">таймауты зафиксированы хотя бы раз</div>
+    </div>
+    <div class="tile flag">
+      <div class="label">Худший результат</div>
+      <div class="value">3</div>
+      <div class="sub">таймаута: 7 эт. в 9:00, 5 и 6 эт. в ~11:20</div>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Карта потерь по этажам и времени</h2>
+    <p class="desc">Число в ячейке — сколько пингов не получили ответ (таймаут) из 500 на этот замер,
+      под ним — процент потерь.</p>
+
+    <div class="heatmap">
+      <table class="grid">
+        <thead>
+          <tr>
+            <th>Этаж</th>
+            <th>9:00 утра</th>
+            <th>~11:20</th>
+            <th>~13:10</th>
+            <th>~16:10</th>
+            <th>~17:30</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr><th>2 этаж</th><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td></tr>
+<tr><th>3 этаж</th><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td></tr>
+<tr><th>4 этаж</th><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td></tr>
+<tr><th>5 этаж</th><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box serious"><span class="n">3</span><span class="t">0.6%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td></tr>
+<tr><th>6 этаж</th><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box serious"><span class="n">3</span><span class="t">0.6%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td></tr>
+<tr><th>7 этаж</th><td class="cell"><div class="cell-box serious"><span class="n">3</span><span class="t">0.6%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">2</span><span class="t">0.4%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td></tr>
+<tr><th>8 этаж</th><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box good"><span class="n">0</span><span class="t">0.0%</span></div></td><td class="cell"><div class="cell-box warning"><span class="n">1</span><span class="t">0.2%</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <span><i class="good"></i>0 таймаутов</span>
+      <span><i class="warning"></i>1–2</span>
+      <span><i class="serious"></i>3–5</span>
+      <span><i class="critical"></i>6 и больше</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Детализация по замерам</h2>
+    <div class="detail">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Этаж</th><th>Время</th><th>Файл</th><th>Время таймаутов</th><th>Таймаутов</th><th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr><td class="floor">2 этаж</td><td>9:00 утра</td><td>9.00\2э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">3 этаж</td><td>9:00 утра</td><td>9.00\3э</td><td>9:06:38</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">4 этаж</td><td>9:00 утра</td><td>9.00\4э</td><td>9:11:35</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">5 этаж</td><td>9:00 утра</td><td>9.00\5э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">6 этаж</td><td>9:00 утра</td><td>9.00\6э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">7 этаж</td><td>9:00 утра</td><td>9.00\7э</td><td>9:20:11–9:21:11</td><td class="num">3</td><td><span class="pill serious">Заметная потеря</span></td></tr>
+<tr><td class="floor">8 этаж</td><td>9:00 утра</td><td>9.00\8э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+
+<tr><td class="floor">2 этаж</td><td>~11:20</td><td>11.20\2э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">3 этаж</td><td>~11:20</td><td>11.20\3э</td><td>11:23:15–11:23:27</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">4 этаж</td><td>~11:20</td><td>11.20\4э</td><td>11:25:14–11:25:22</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">5 этаж</td><td>~11:20</td><td>11.20\5э</td><td>11:27:01–11:27:20</td><td class="num">3</td><td><span class="pill serious">Заметная потеря</span></td></tr>
+<tr><td class="floor">6 этаж</td><td>~11:20</td><td>11.20\6э</td><td>11:29:15–11:29:36</td><td class="num">3</td><td><span class="pill serious">Заметная потеря</span></td></tr>
+<tr><td class="floor">7 этаж</td><td>~11:20</td><td>11.20\7э</td><td>11:31:32</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">8 этаж</td><td>~11:20</td><td>11.20\8э</td><td>11:34:48</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+
+<tr><td class="floor">2 этаж</td><td>~13:10</td><td>13.10\2э</td><td>13:12:31</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">3 этаж</td><td>~13:10</td><td>13.10\3э</td><td>13:15:37–13:15:42</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">4 этаж</td><td>~13:10</td><td>13.10\4э</td><td>13:17:48</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">5 этаж</td><td>~13:10</td><td>13.10\5э</td><td>13:19:51</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">6 этаж</td><td>~13:10</td><td>13.10\6э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">7 этаж</td><td>~13:10</td><td>13.10\7э</td><td>13:24:36</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">8 этаж</td><td>~13:10</td><td>13.10\8э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+
+<tr><td class="floor">2 этаж</td><td>~16:10</td><td>16.10\2э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">3 этаж</td><td>~16:10</td><td>16.10\3э</td><td>16:20:37–16:21:09</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">4 этаж</td><td>~16:10</td><td>16.10\4э</td><td>16:25:19–16:25:35</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">5 этаж</td><td>~16:10</td><td>16.10\5э</td><td>16:26:42–16:26:58</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">6 этаж</td><td>~16:10</td><td>16.10\6э</td><td>16:28:30–16:28:45</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">7 этаж</td><td>~16:10</td><td>16.10\7э</td><td>16:31:19–16:31:24</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">8 этаж</td><td>~16:10</td><td>16.10\8э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+
+<tr><td class="floor">2 этаж</td><td>~17:30</td><td>17.30\2э</td><td>17:30:08–17:30:14</td><td class="num">2</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">3 этаж</td><td>~17:30</td><td>17.30\3э</td><td>17:38:31</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+<tr><td class="floor">4 этаж</td><td>~17:30</td><td>17.30\4э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">5 этаж</td><td>~17:30</td><td>17.30\5э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">6 этаж</td><td>~17:30</td><td>17.30\6э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">7 этаж</td><td>~17:30</td><td>17.30\7э</td><td>—</td><td class="num">0</td><td><span class="pill good">Норма</span></td></tr>
+<tr><td class="floor">8 этаж</td><td>~17:30</td><td>17.30\8э</td><td>17:49:07</td><td class="num">1</td><td><span class="pill warning">Небольшая потеря</span></td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Газетный, 17 · данные: скрины ping 8.8.8.8 + поиск «Превышен» в текстовом редакторе, обход 29.09. Открывается offline, без интернета.</footer>
+</div>
+</body>
+</html>
